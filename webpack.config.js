@@ -8,7 +8,7 @@ module.exports = {
     },
     output: {
         filename: "[name].js",
-        library: "aos-plus",
+        library: "aosPlus",
         libraryExport: "default", // 不添加的话引用的时候需要 tools.default
         libraryTarget: "umd", // var this window ...
     },

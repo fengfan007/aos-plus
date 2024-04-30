@@ -4,9 +4,9 @@
 
 > 一款轻量级的动画滚动库
 
-- Simple and lightweight
-- No statically built html files
-- Multiple themes
+- 简单轻量级
+- 没有静态构建的html文件
+- 支持所有的 animation.css 动画
 
-[GitHub](https://github.com/docsifyjs/docsify/)
+[GitHub](https://github.com/fengfan007/aos-plus.git)
 [快速开始](#docsify)

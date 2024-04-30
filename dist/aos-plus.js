@@ -4,9 +4,9 @@
 	else if(typeof define === 'function' && define.amd)
 		define([], factory);
 	else if(typeof exports === 'object')
-		exports["aos-plus"] = factory();
+		exports["aosPlus"] = factory();
 	else
-		root["aos-plus"] = factory();
+		root["aosPlus"] = factory();
 })(self, () => {
 return /******/ (() => { // webpackBootstrap
 /******/ 	"use strict";
@@ -4574,64 +4574,92 @@ var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
 (() => {
 __webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
 /* harmony import */ var animate_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
-
 /**
- * Represents a book.
- * @constructor
+ * *******************************************************
+ * AOSPlus (Animate on scroll +) - 并不是 aos 的升级版
+ * 用于在两个方向上滚动动画元素
+ * *******************************************************
  */
-const aos = () => {
-    console.log('进来了');
-    const options = {
-        offset: 0, // 距离底部距离触发
-        delay: 0, // 延迟时间
-        duration: 400, // 动画持续时间
-        once: false, // 是否只执行一次动画
+
+
+let options = {
+    offset: 0, // 距离底部距离触发
+    delay: 0, // 延迟时间
+    duration: 400, // 动画持续时间
+    once: false, // 是否只执行一次动画
+    attr: 'data-aos', // 动画元素属性
+}
+const init = ((settings) => {
+    options = Object.assign(options, settings);
+    // 检测浏览器是否支持 MutationObserver
+    if (!window.MutationObserver) {
+        console.info(`
+          aosPlus: 本浏览器不支持MutationObserver.
+          请更新浏览器更高版本.
+        `);
+        return;
     }
-    // 获取所有需要动画的元素  
-    const elements = document.querySelectorAll('[data-aos]');
-    if(elements){
-        elements.forEach((element) => {  
-            // 监听元素进入视口的事件
-            const observer = new IntersectionObserver((entries, observer) => {  
-              entries.forEach((entry) => {  
-                if (entry.isIntersecting) {
-                    animateElement(element, options)
-                        
-                    // 如果只执行一次动画，则停止观察  
-                    if (options.once) {  
-                        observer.unobserve(element);  
-                    }  
-                } 
-              });  
-            }, {  
-              root: null,  
-              rootMargin: `${options.offset}px 0px`,  
-              threshold: 0.1, // 触发动画的阈值  
-            });  
-            observer.observe(element);  
-      });  
+    if(document.body){
+        observeElement();
+    }else{
+        window.addEventListener('DOMContentLoaded', () => {
+            observeElement();
+        })
     }
     
+})
+/**
+ * 观察 dom节点变化
+ */
+const observeElement = () => {
+    // 观察器的配置（需要观察什么变动）
+    const config = { attributes: true, childList: true, subtree: true, attributeFilter:[options.attr] };
+    const observer = new MutationObserver(callback);
+    observer.observe(document.body, config)
+    observeInView();
 }
-function animateElement(element, options) {  
-     // 添加动画类名来触发CSS动画  
-     const animateName = element.getAttribute('data-aos');
-     element.classList.add('animate__animated');  
-     element.classList.add(`${animateName}`);
-     if (!options.once) {  
-        setTimeout(() => {
-            element.classList.remove(`${animateName}`);
-        }, 1000);
-    }  
+
+/**
+ * 观察 dom节点是否出现在可视区域内
+ */
+const observeInView = () => {  
+    const elements = document.querySelectorAll(`[${options.attr}]`);
+    if (elements.length === 0) {
+        console.log('没有找到动画元素');
+        return;
+    }
+    elements.forEach(element => {
+        // 监听元素进入视口的事件
+        const observer = new IntersectionObserver((entries, observer) => {  
+        entries.forEach((entry) => {  
+            if (entry.isIntersecting) {
+                console.log('动画元素进入视口:', element);
+                animateElement(element, options)
+                    
+                // 如果只执行一次动画，则停止观察  
+                if (options.once) {  
+                    observer.unobserve(element);  
+                }  
+            } 
+        });  
+        }, {  
+            root: null,  
+            rootMargin: `${options.offset}px 0px`,  
+            threshold: 0.1, // 触发动画的阈值  
+        });  
+        observer.observe(element); 
+    })
 }
-// 目标节点
-const targetNode = document.querySelector('body');
- 
-// 观察器的配置（需要观察什么变动）
-const config = { attributes: true, childList: true, subtree: true, attributeFilter:["data-aos"] };
- 
-// 当观察到变动时执行的回调函数
+
+/**
+ * 当观察到变动时执行的回调函数
+ * @param {*} mutationsList 
+ * @param {*} observer 
+ */
 const callback = function(mutationsList, observer) {
     for(let mutation of mutationsList) {
         if (mutation.type === 'childList') {
@@ -4639,32 +4667,38 @@ const callback = function(mutationsList, observer) {
                  // 判断节点是否为元素节点  
                 if (addedNode.nodeType === 1) {  
                     // 检查元素是否有特定的data属性  
-                    const aosDom = addedNode.querySelectorAll('[data-aos]')
-                    if (aosDom.length>0) {  
+                    const aosDom = addedNode.querySelectorAll(`[${options.attr}]`) ;
+                    const hasDataAos = addedNode.hasAttribute(options.attr);
+                    if (aosDom.length > 0 || hasDataAos) {  
                         console.log('找到了一个包含data属性的元素:', addedNode);  
-                        // 如果你只需要找到第一个这样的元素，可以取消观察  
-                        aos();
-                        // observer.disconnect();
+                        init()
                     }  
                 }  
             });  
             
         }
-        else if (mutation.type === 'attributeFilter') {
-            console.log('The ' + mutation.attributeName + ' attribute was modified.');
-        }
     }
 };
- 
-// 创建一个观察器实例并传入回调函数
-const observer = new MutationObserver(callback);
- 
-// 开始观察目标节点
-observer.observe(targetNode, config);
- 
-// 以后，你可以停止观察
-// observer.disconnect();
 
+/**
+ * 执行动画
+ * @param {*} element 
+ * @param {*} options 
+ */
+const animateElement = (element, options) => {
+     // 添加动画类名来触发CSS动画  
+     const animateName = element.getAttribute(options.attr);
+     element.classList.add('animate__animated');  
+     element.classList.add(`${animateName}`);
+     if (!options.once) {  
+        setTimeout(() => {
+            element.classList.remove(`${animateName}`);
+        }, options.duration + options.delay);
+    }  
+}
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
+    init
+});
 })();
 
 __webpack_exports__ = __webpack_exports__["default"];
